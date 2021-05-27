@@ -10,8 +10,8 @@ class Company(models.Model):
 
 class YahooStock(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    regular_price = models.DecimalField(decimal_places=2, max_digits=10)
-    change = models.DecimalField(max_digits=6, decimal_places=2)
+    regular_price = models.DecimalField(decimal_places=10, max_digits=20)
+    change = models.DecimalField(max_digits=20, decimal_places=10)
     change_percentages = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(-100.0),
                                                                                          MaxValueValidator(100.0)])
     download_date = models.DateTimeField(auto_now_add=True)
@@ -30,7 +30,7 @@ class UserForecast(models.Model):
     forecast_date = models.DateField()
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    forecast_price = models.DecimalField(decimal_places=2, max_digits=10)
+    forecast_price = models.DecimalField(decimal_places=10, max_digits=20)
     excess_or_shortage = models.CharField(max_length=255, null=True)
     difference = models.DecimalField(decimal_places=2, max_digits=10, null=True)
     real_price = models.DecimalField(decimal_places=2, max_digits=10, null=True)

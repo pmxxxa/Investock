@@ -38,33 +38,6 @@ class RegisterView(APIView):
             return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, format=None):
-        content = {
-            'user': str(request.user),  # `django.contrib.auth.User` instance.
-            'auth': str(request.auth),  # None
-        }
-        return Response(content)
-
-
-class LoginByAuthToken(ObtainAuthToken):
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'user_id': user.pk,
-            'email': user.email
-        })
-
-
 def logout_view(request):
     logout(request)
     return JsonResponse({'msg': 'You have been logout!'}, status=status.HTTP_200_OK)
@@ -219,7 +192,7 @@ class UserForecastViewSet(LoginRequiredMixin, viewsets.ViewSet):
             real_price = historical_data(company_symbol)['adjclose price'][0]
             forecast_price = float(user_forecast.forecast_price)
             difference = fabs(real_price - forecast_price)
-            if real_price - forecast_price > 0:
+            if real_price - forecast_price < 0:
                 excess_or_shortage = 'EXCESS'
             else:
                 excess_or_shortage = 'SHORTAGE'

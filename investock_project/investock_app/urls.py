@@ -3,8 +3,8 @@ from django.http import HttpResponse
 from django.urls import path
 from rest_framework.authtoken import views
 
-from .views import YahooStockViewSet, CommnetViewSet, UserForecastViewSet, LoginByAuthToken, logout_view, \
-    ChangePasswordView, UserDetailView, CompanyView
+from .views import YahooStockViewSet, CommnetViewSet, UserForecastViewSet, logout_view, ChangePasswordView, \
+    UserDetailView, CompanyView
 
 yahoo_stock_list = YahooStockViewSet.as_view({'get': 'list'})
 yahoo_stock_details = YahooStockViewSet.as_view({'get': 'retrieve'})
@@ -19,7 +19,6 @@ forecast_list = UserForecastViewSet.as_view({'get': 'list'})
 
 urlpatterns = [
     path('token-auth/', views.obtain_auth_token),
-    # path('login/', LoginByAuthToken.as_view()),
     path('logout/', logout_view),
     path('user-detail/', UserDetailView.as_view()),
     path('change-password/', ChangePasswordView.as_view()),
