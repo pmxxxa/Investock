@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.exceptions import MethodNotAllowed
@@ -18,24 +17,22 @@ from .models import YahooStock, Company, Comment, UserForecast
 from .serializers import YahooStockSerializer, CommentSerializer, TrendSerializer, UserForecastSerializer, \
     UserSerializer, CompanySerializer
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
 
 
 class RegisterView(APIView):
 
     def post(request):
-        serialized = UserSerializer(data=request.DATA)
-        if serialized.is_valid():
+        serializer = UserSerializer(data=request.DATA)
+        if serializer.is_valid():
             User.objects.create_user(
-                serialized.init_data['email'],
-                serialized.init_data['username'],
-                serialized.init_data['password'],
-                serialized.init_data['first_name'],
-                serialized.init_data['last_name']
+                serializer.init_data['email'],
+                serializer.init_data['username'],
+                serializer.init_data['password'],
+                serializer.init_data['first_name'],
+                serializer.init_data['last_name']
             )
-            return Response(serialized.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def logout_view(request):
@@ -90,7 +87,7 @@ class YahooStockViewSet(viewsets.ViewSet):
         queryset = Company.objects.all()
         company = get_object_or_404(queryset, pk=pk)
         company_symbol = company.company_symbol
-        last_download = YahooStock.objects.all().order_by('-download_date').last()
+        last_download = YahooStock.objects.filter(company=company).order_by('download_date').last()
         if last_download is None or (last_download.download_date < datetime.now(pytz.utc) - timedelta(hours=1)):
             new_record = yahoo_stock_download(company_symbol)
             regular_price = new_record['regular_price']
@@ -100,7 +97,7 @@ class YahooStockViewSet(viewsets.ViewSet):
             YahooStock.objects.create(company=company, regular_price=regular_price, change=change,
                                       change_percentages=change_percentages,
                                       download_date=download_date)
-        queryset = YahooStock.objects.all()
+        queryset = YahooStock.objects.filter(company=company)
         serializer = YahooStockSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -141,6 +138,9 @@ class CommnetViewSet(LoginRequiredMixin, viewsets.ViewSet):
         comment = Comment.objects.get(id=pk)
         if comment.user.pk != request.user.pk:
             raise MethodNotAllowed(method=request.method)
+        comment.edited=True
+        comment.edition_time = datetime.now(pytz.utc)
+        comment.save()
         serializer = CommentSerializer(comment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save(user=self.request.user)
@@ -155,13 +155,13 @@ class CommnetViewSet(LoginRequiredMixin, viewsets.ViewSet):
 
 
 class TrendView(APIView):
-    def check_trend(self, request, pk=None):
+    def get(self, request, pk=None):
         queryset = Company.objects.all()
         company = get_object_or_404(queryset, pk=pk)
         company_symbol = company.company_symbol
-        trend(historical_data(company_symbol))
-        serializer = TrendSerializer(data=request.data)
-        return JsonResponse(serializer.data)
+        value = trend(historical_data(company_symbol)['adjclose price'])
+        serializer = TrendSerializer(value)
+        return Response(serializer.data)
 
 
 class UserForecastViewSet(LoginRequiredMixin, viewsets.ViewSet):

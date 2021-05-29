@@ -7,7 +7,7 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'password', 'first_name', 'last_name']
+        fields = ['email', 'username', 'password', 'first_name', 'last_name']
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -31,7 +31,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class TrendSerializer(serializers.Serializer):
-    value = serializers.IntegerField()
+    value = serializers.CharField(max_length=255)
 
 
 class UserForecastSerializer(serializers.ModelSerializer):
