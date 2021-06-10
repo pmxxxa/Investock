@@ -33,7 +33,7 @@ urlpatterns = [
     path('edit-comment/<int:pk>/', edit_comment),
     path('delete-comment/<int:pk>/', delete_comment),
     path('forecast-list/', forecast_list),
-    path('create-forecast/', create_forecast),
+    path('create-forecast/<int:pk>/', create_forecast),
     path('check-forecast/<int:pk>/', check_forecast),
     path('accounts/', admin.site.urls),
 ]

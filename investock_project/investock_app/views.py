@@ -170,12 +170,14 @@ class UserForecastViewSet(LoginRequiredMixin, viewsets.ViewSet):
         serializer = UserForecastSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def create_forecast(self, request):
+    def create_forecast(self, request, pk=None):
+        queryset = Company.objects.all()
+        company = get_object_or_404(queryset, pk=pk)
         data = {
             "user": self.request.user.pk,
             "forecast_date": request.data.get("forecast_date"),
             "forecast_price": request.data.get("forecast_price"),
-            "company": request.data.get("company"),
+            "company": company.pk,
         }
         serializer = UserForecastSerializer(data=data)
         if serializer.is_valid():
